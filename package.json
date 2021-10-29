@@ -1,0 +1,24 @@
+{
+  "name": "module6-group-499573-476462",
+  "version": "1.0.0",
+  "description": "Xinyi Ye-499573-Mercy811",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cse330-fall-2021/module6-group-499573-476462.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cse330-fall-2021/module6-group-499573-476462/issues"
+  },
+  "homepage": "https://github.com/cse330-fall-2021/module6-group-499573-476462#readme"
+}
