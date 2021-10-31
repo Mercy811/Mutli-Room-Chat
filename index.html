@@ -14,6 +14,7 @@
             <p><input type="text" name="username" id="username" autocomplete="off" placeholder="Username" required></p>
             <p><label for="roomId">Romm Id</label></p>
             <p><input type="text" name="roomId" id="roomId" autocomplete="off" placeholder="Room Id" required></p>
+            <button id="join-room-btn">Join</button>
         </form>
     </div>
 
@@ -32,40 +33,42 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
 
+        joinBtn = document.getElementById('join-room-btn');
+        joinBtn.addEventListener('click',function(e){
+            e.preventDefault();
+            let username = document.getElementById('username');
+            let roomId = document.getElementById('roomId');
 
-
-        // load the socket.io-client
-        // which exposes an io global
-        // and the endpoint GET /socket.io/socket.io.js
-        // and then connect
-        // NOTICE: we do not specify any URL when we calll io()
-        // since it defuatls to trying to connect to the host that serves the page
-        let socket = io();
-
-
-        // SEND messages to server
-        let btn = document.getElementById('send-msg-btn');
-        let msg = document.getElementById('msg-input');
-
-        btn.addEventListener('click', function(e){
-        e.preventDefault();
-        if (msg.value){
-            socket.emit('chat message', input.value);
-            msg.value = '';
-        }
+            if(username.value && roomId.value){
+                socket.emit('join', {username:username.value, roomId:roomId.value});
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('chat-container').style.display = 'block';
+            }
         });
 
-        // RECEIVE messages from server
-        var messages = document.getElementById('msg-list');
+        // // SEND messages to server
+        // let btn = document.getElementById('send-msg-btn');
+        // let msg = document.getElementById('msg-input');
 
-        socket.on('chat message',function(msg){
-        var item = document.createElement('li');
-        item.textContent = msg;
-        messages.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
-        });
+        // btn.addEventListener('click', function(e){
+        // e.preventDefault();
+        // if (msg.value){
+        //     socket.emit('chat message', input.value);
+        //     msg.value = '';
+        // }
+        // });
 
+        // // RECEIVE messages from server
+        // var messages = document.getElementById('msg-list');
+
+        // socket.on('chat message',function(msg){
+        // var item = document.createElement('li');
+        // item.textContent = msg;
+        // messages.appendChild(item);
+        // window.scrollTo(0, document.body.scrollHeight);
+        // });
 
     </script>
 </body>

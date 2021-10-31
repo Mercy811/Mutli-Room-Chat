@@ -10,17 +10,6 @@ const server = http.createServer(app);
 const {Server} = require("socket.io");
 const io = new Server(server);
 
-// rooms: an array of room object
-// room object: 
-//      owner_name  String
-//      room_name   String
-//      isPrivate   Boolean
-//      password    String
-//      blacklist   Array of String
-//      current_users Array of String
-const rooms = [];
-
-
 // define a route handler 
 // that gets called when we hit our website home
 app.get('/', (req, res) => {
@@ -32,16 +21,22 @@ app.get('/', (req, res) => {
 //    and log it to the console
 // 2. each socket also fires a special disconnect event
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  // console.log('a user connected');
 
-  socket.on('chat message',(msg)=>{
-    console.log('message: '+msg);
-    io.emit('chat message',msg);
-  });
+  socket.on('join',(userInfo)=>{
+    // console.log("join callled")
+    console.log(userInfo.username);
+    console.log(userInfo.roomId);
+  })
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
+  // socket.on('chat message',(msg)=>{
+  //   console.log('message: '+msg);
+  //   io.emit('chat message',msg);
+  // });
+
+  // socket.on('disconnect', () => {
+  //   console.log('user disconnected');
+  // });
 });
 
 // make the http server listen on port 3000
