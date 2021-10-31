@@ -87,6 +87,14 @@
             window.scrollTo(0, document.body.scrollHeight);
         });
 
+        // RECEIVE newUser
+        socket.on('newUser',function(username){
+            let item = document.createElement('li');
+            item.textContent = username+" Joined Chat!";
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        })
+
         // RECEIVE updateUserList 
         let userList = document.getElementById('current-user-list');
 
@@ -103,13 +111,7 @@
             });
         })
 
-        // RECEIVE newUser
-        socket.on('newUser',function(username){
-            let item = document.createElement('li');
-            item.textContent = username+" Joined Chat!";
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        })
+
 
     </script>
 </body>
