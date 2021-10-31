@@ -1,16 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        #chat-msg-display-container{
+        #chat-msg-display-container {
             border: 1px solid black;
+        }
+
+        .msg-item-username {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .msg-item-time {
+            color: #777;
+            font-size: 14px;
+            margin-right: 5 px;
         }
     </style>
 </head>
+
 <body>
     <div id="login-container">
         <h1>Join</h1>
@@ -30,7 +43,7 @@
             <ul id="current-user-list"></ul>
         </div>
         <div id="chat-msg-display-container">
-            <ul id="msg-list"></ul>
+            <div id="msg-list"></div>
         </div>
         <div id="chat-msg-compose-container">
             <form id="send-msg-form">
@@ -48,7 +61,7 @@
 
         // LOGIN
         joinBtn = document.getElementById('join-room-btn');
-        joinBtn.addEventListener('click',function(e){
+        joinBtn.addEventListener('click', function (e) {
             // make sure to add the following line
             // otherwise form sends a GET automatically
             // and the url will be changed to /?username={username}&roomId={roomID}
@@ -56,12 +69,12 @@
             let username = document.getElementById('username');
             let roomId = document.getElementById('roomId');
 
-            if(username.value && roomId.value){
+            if (username.value && roomId.value) {
                 socket.connect();
-                socket.emit('join', {username:username.value, roomId:roomId.value});
+                socket.emit('join', { username: username.value, roomId: roomId.value });
                 document.getElementById('login-container').style.display = 'none';
                 document.getElementById('chat-container').style.display = 'block';
-                document.getElementById('current-room').innerText = "Current Room: "+roomId.value;
+                document.getElementById('current-room').innerText = "Current Room: " + roomId.value;
             }
         });
 
@@ -69,9 +82,9 @@
         let msgBtn = document.getElementById('send-msg-btn');
         let msg = document.getElementById('msg-input');
 
-        msgBtn.addEventListener('click', function(e){
+        msgBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            if (msg.value){
+            if (msg.value) {
                 socket.emit('chat message', msg.value);
                 msg.value = '';
             }
@@ -80,17 +93,33 @@
         // RECEIVE messages from server
         let messages = document.getElementById('msg-list');
 
-        socket.on('chat message',function(msg){
-            let item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
+        socket.on('chat message', function (args) {
+            let itemDiv = document.createElement('div');
+            itemDiv.className = "msg-item";
+            let itemInfo = document.createElement('p')
+            let itemUsername = document.createElement('span');
+            itemUsername.className = "msg-item-username";
+            itemUsername.innerText = args[0];
+            let itemTime = document.createElement('span');
+            itemTime.className = "msg-item-time";
+            itemTime.innerText = new Date().toLocaleString();
+            let itemMsg = document.createElement('p');
+            itemMsg.className = "msg-item-content";
+            itemMsg.innerText = args[1];
+
+            itemInfo.appendChild(itemUsername);
+            itemInfo.appendChild(itemTime);
+            itemDiv.appendChild(itemInfo);
+            itemDiv.appendChild(itemMsg);
+            messages.appendChild(itemDiv);
+
             window.scrollTo(0, document.body.scrollHeight);
         });
 
         // RECEIVE newUser
-        socket.on('newUser',function(username){
-            let item = document.createElement('li');
-            item.textContent = username+" Joined Chat!";
+        socket.on('newUser', function (username) {
+            let item = document.createElement('div');
+            item.textContent = username + " Joined Chat!";
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
@@ -98,9 +127,9 @@
         // RECEIVE updateUserList 
         let userList = document.getElementById('current-user-list');
 
-        socket.on('updateUserList',function(usernamesInRoom){
+        socket.on('updateUserList', function (usernamesInRoom) {
             // clear current-user-list
-            while(userList.firstChild){
+            while (userList.firstChild) {
                 userList.removeChild(userList.firstChild);
             }
             // append users to current user list
@@ -115,4 +144,5 @@
 
     </script>
 </body>
+
 </html>

@@ -53,8 +53,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on('chat message',(msg)=>{
-    console.log('========== chat message ==========');
-    io.to(users[socket.id].roomId).emit('chat message',msg);
+    io.to(users[socket.id].roomId).emit('chat message',Array(users[socket.id].username, msg));
   });
 
   socket.on('disconnect', () => {
