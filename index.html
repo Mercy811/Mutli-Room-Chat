@@ -30,9 +30,44 @@
         <form id="login-form">
             <p><label for="username">Username</label></p>
             <p><input type="text" name="username" id="username" autocomplete="off" placeholder="Username" required></p>
-            <p><label for="roomId">Romm Id</label></p>
+            <p><label for="roomId">Room Id</label></p>
             <p><input type="text" name="roomId" id="roomId" autocomplete="off" placeholder="Room Id" required></p>
+            
+            <div id="passwordFiled" style="display: none;">
+                <p><label for="join-pwd">It's a private room, please input room password below</label></p>
+                <p><input type="text" name="join-pwd" id="join-pwd" autocomplete="off" placeholder="Password"></p>
+                <p id="pwd-msg"></p>
+            </div>
             <button id="join-room-btn">Join</button>
+        </form>
+    </div>
+
+    <!-- <div id="join-private-room-container" style="display: none;">
+        <h1>Join Private Room</h1>
+        <form id="join-private-room-form">
+            <p><label for="username">Username</label></p>
+            <p><input type="text" name="username" id="join-private-room-username" autocomplete="off" placeholder="Username" required></p>
+            <p><label for="roomId">Room Id</label></p>
+            <p><input type="text" name="roomId" id="join-private-room-roomId" autocomplete="off" placeholder="Room Id" required></p>
+            <p><label for="password">Password</label></p>
+            <p><input type="text" name="password" id="join-private-room-password" required></p>
+            <button id="join-private-room-btn">Join</button>
+        </form>
+    </div> -->
+
+    <div id="create-room-container" style="display: none;">
+        <h1>Create Room</h1>
+        <form id="create-room-form">
+            <p><label for="adminName">Admin Name</label></p>
+            <p><input type="text" name="adminName" id="adminName" autocomplete="off" placeholder="Admin Name" required></p>
+            <p><label for="roomName">Room Id</label></p>
+            <p><input type="text" name="roomName" id="roomName" autocomplete="off" placeholder="Room Id" required></p>
+            <p>
+                <label for="isPrivate">Private Room</label>
+                <input type="checkbox" name="isPrivate" id="isPrivate" onclick="displayPwdInput()">
+            </p>
+            <p><input type="text" name="pwd" id="pwd" placeholder="Password" style="display: none;"></p>
+            <p><button id="create-room-btn">Create Room</button></p>
         </form>
     </div>
 
@@ -55,6 +90,28 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // when create room
+        // display password field when isPrivate checkbox is checked
+        // hide paassword filed when isPrivate checkbox is unchecked
+        function displayPwdInput() {
+            let checkBox = document.getElementById("isPrivate");
+            let text = document.getElementById("pwd");
+
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+
+        // when join room
+        // if the room is private
+        // call this function to display password input field
+        function displayJoinPwdInput(){
+            document.getElementById("passwordFiled").style.display = "block";
+        }
+    </script>
+    <script>
         const socket = io({
             autoConnect: false
         });
@@ -68,15 +125,50 @@
             e.preventDefault();
             let username = document.getElementById('username');
             let roomId = document.getElementById('roomId');
+            let pwd = document.getElementById('join-pwd');
 
-            if (username.value && roomId.value) {
-                socket.connect();
-                socket.emit('join', { username: username.value, roomId: roomId.value });
-                document.getElementById('login-container').style.display = 'none';
-                document.getElementById('chat-container').style.display = 'block';
-                document.getElementById('current-room').innerText = "Current Room: " + roomId.value;
-            }
+            socket.connect();
+            socket.emit('join', { 
+                username: username.value, 
+                roomId: roomId.value,
+                password: pwd.value
+            });
         });
+
+        createRoomBtn = document.getElementById('create-room-btn');
+        createRoomBtn.addEventListener('click',function(e){
+            e.preventDefault();
+            let username = document.getElementById('username').value;
+            let roomId = document.getElementById('roomId').value;
+            let isPrivate = document.getElementById('isPrivate').checked;
+            let password = document.getElementById('pwd').value;
+
+            socket.connect();
+            socket.emit('createRoom',{ 
+                username: username, 
+                roomId: roomId,
+                isPrivate: isPrivate,
+                password: password
+            })
+        
+        });
+
+        socket.on('joinSuccess', function(){
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('create-room-container').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'block';
+            document.getElementById('current-room').innerText = "Current Room: " + roomId.value;
+        })
+
+        socket.on('roomNotExist',function(){
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('create-room-container').style.display = 'block';
+            document.getElementById('chat-container').style.display = 'none';
+        })
+
+        socket.on('wrongPassword', function(){
+            document.getElementById('pwd-msg').innerText = "Wrong password, please try again";
+        })
 
         // SEND messages to server
         let msgBtn = document.getElementById('send-msg-btn');
@@ -138,6 +230,11 @@
                 item.textContent = element;
                 userList.appendChild(item);
             });
+        })
+
+        socket.on('passwordNeeded',function(){
+            console.log("pwdd");
+            displayJoinPwdInput();
         })
 
 
