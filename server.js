@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 //      username
 //      roomId
 let users = {};
-// users
+// rooms
 // roomId : 
 //      owner
 //      isPrivate
@@ -110,28 +110,6 @@ io.on('connection', async (socket) => {
 
     io.to(socket.id).emit('joinSuccess');
     userJoin(socket, userInfo);
-
-
-    // socket.join(userInfo.roomId);
-    
-    // users[socket.id] = {
-    //   "roomId":userInfo.roomId,
-    //   "username":userInfo.username
-    // };
-
-    // // get an array of usernames in room roomId
-    // let usernamesInRoom = [];
-    // await io.in(userInfo.roomId).allSockets()
-    // .then(socketsInRoomSet => Array.from(socketsInRoomSet))
-    // .then(socketsInRoomArray => {
-    //   socketsInRoomArray.forEach(element => {
-    //     usernamesInRoom.push(users[element].username);
-    //   });
-    // })
-    // .catch(error => console.error('Error:', error));
-
-    // io.to(userInfo.roomId).emit('newUser',userInfo.username);
-    // io.to(userInfo.roomId).emit('updateUserList',usernamesInRoom);
   });
 
   socket.on('chat message',(msg)=>{

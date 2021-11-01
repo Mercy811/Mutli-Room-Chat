@@ -42,19 +42,6 @@
         </form>
     </div>
 
-    <!-- <div id="join-private-room-container" style="display: none;">
-        <h1>Join Private Room</h1>
-        <form id="join-private-room-form">
-            <p><label for="username">Username</label></p>
-            <p><input type="text" name="username" id="join-private-room-username" autocomplete="off" placeholder="Username" required></p>
-            <p><label for="roomId">Room Id</label></p>
-            <p><input type="text" name="roomId" id="join-private-room-roomId" autocomplete="off" placeholder="Room Id" required></p>
-            <p><label for="password">Password</label></p>
-            <p><input type="text" name="password" id="join-private-room-password" required></p>
-            <button id="join-private-room-btn">Join</button>
-        </form>
-    </div> -->
-
     <div id="create-room-container" style="display: none;">
         <h1>Create Room</h1>
         <form id="create-room-form">
@@ -116,7 +103,7 @@
             autoConnect: false
         });
 
-        // LOGIN
+        // ----------- LOGIN -----------
         joinBtn = document.getElementById('join-room-btn');
         joinBtn.addEventListener('click', function (e) {
             // make sure to add the following line
@@ -153,6 +140,21 @@
         
         });
 
+        socket.on('roomNotExist',function(){
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('create-room-container').style.display = 'block';
+            document.getElementById('chat-container').style.display = 'none';
+        })
+
+        socket.on('passwordNeeded',function(){
+            console.log("pwdd");
+            displayJoinPwdInput();
+        })
+
+        socket.on('wrongPassword', function(){
+            document.getElementById('pwd-msg').innerText = "Wrong password, please try again";
+        })
+        
         socket.on('joinSuccess', function(){
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('create-room-container').style.display = 'none';
@@ -160,17 +162,29 @@
             document.getElementById('current-room').innerText = "Current Room: " + roomId.value;
         })
 
-        socket.on('roomNotExist',function(){
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('create-room-container').style.display = 'block';
-            document.getElementById('chat-container').style.display = 'none';
+        socket.on('newUser', function (username) {
+            let item = document.createElement('div');
+            item.textContent = username + " Joined Chat!";
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
         })
 
-        socket.on('wrongPassword', function(){
-            document.getElementById('pwd-msg').innerText = "Wrong password, please try again";
+        let userList = document.getElementById('current-user-list');
+        socket.on('updateUserList', function (usernamesInRoom) {
+            // clear current-user-list
+            while (userList.firstChild) {
+                userList.removeChild(userList.firstChild);
+            }
+            // append users to current user list
+            usernamesInRoom.forEach(element => {
+                let item = document.createElement('li');
+                item.textContent = element;
+                userList.appendChild(item);
+            });
         })
 
-        // SEND messages to server
+        // ----------- CAHT MESSAGE -----------
+        // send messages to server
         let msgBtn = document.getElementById('send-msg-btn');
         let msg = document.getElementById('msg-input');
 
@@ -182,7 +196,8 @@
             }
         });
 
-        // RECEIVE messages from server
+        // ----------- CAHT MESSAGE -----------
+        // CHAT MESSAGE: receive messages from server
         let messages = document.getElementById('msg-list');
 
         socket.on('chat message', function (args) {
@@ -207,38 +222,6 @@
 
             window.scrollTo(0, document.body.scrollHeight);
         });
-
-        // RECEIVE newUser
-        socket.on('newUser', function (username) {
-            let item = document.createElement('div');
-            item.textContent = username + " Joined Chat!";
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        })
-
-        // RECEIVE updateUserList 
-        let userList = document.getElementById('current-user-list');
-
-        socket.on('updateUserList', function (usernamesInRoom) {
-            // clear current-user-list
-            while (userList.firstChild) {
-                userList.removeChild(userList.firstChild);
-            }
-            // append users to current user list
-            usernamesInRoom.forEach(element => {
-                let item = document.createElement('li');
-                item.textContent = element;
-                userList.appendChild(item);
-            });
-        })
-
-        socket.on('passwordNeeded',function(){
-            console.log("pwdd");
-            displayJoinPwdInput();
-        })
-
-
-
     </script>
 </body>
 
