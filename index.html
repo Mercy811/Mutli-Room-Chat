@@ -75,6 +75,31 @@
         </div>
     </div>
 
+    <script>
+        // reference: https://www.codegrepper.com/code-examples/javascript/login+with+cookies+javascript
+        function setCookie(name, value, days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+        function deleteCookie(name){
+            document.cookie = name+"=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        }
+    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         // when create room
@@ -147,7 +172,6 @@
         })
 
         socket.on('passwordNeeded',function(){
-            console.log("pwdd");
             displayJoinPwdInput();
         })
 
@@ -155,7 +179,9 @@
             document.getElementById('pwd-msg').innerText = "Wrong password, please try again";
         })
         
-        socket.on('joinSuccess', function(){
+        socket.on('joinSuccess', function(data){
+            setCookie("username",data.username);
+            setCookie("currentRoomId",data.roomId);
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('create-room-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'block';
@@ -170,15 +196,39 @@
         })
 
         let userList = document.getElementById('current-user-list');
-        socket.on('updateUserList', function (usernamesInRoom) {
+        socket.on('updateUserList', function (data) {
             // clear current-user-list
             while (userList.firstChild) {
                 userList.removeChild(userList.firstChild);
             }
+
             // append users to current user list
-            usernamesInRoom.forEach(element => {
+            data.usernamesInRoom.forEach(element => {
                 let item = document.createElement('li');
-                item.textContent = element;
+
+                if(element == data.owner){
+                    item.innerHTML = "<strong>"+element+"(Owner)</strong>";
+                }else{
+                    item.textContent = element;
+                }
+
+                if(getCookie("username") == data.owner && element!=data.owner){
+                    let removeBtn = document.createElement('button');
+                    removeBtn.textContent = "Remove";
+                    removeBtn.id = element;
+                    removeBtn.addEventListener('click',function(){
+                        socket.emit("remove",{
+                            username:this.id
+                        })
+                    })
+                    item.appendChild(removeBtn);
+
+                    let banBtn = document.createElement('button');
+                    banBtn.textContent = "Ban";
+                    banBtn.id = element;
+                    item.appendChild(banBtn);
+                }
+                
                 userList.appendChild(item);
             });
         })
@@ -222,6 +272,15 @@
 
             window.scrollTo(0, document.body.scrollHeight);
         });
+
+        socket.on('remove',function(data){
+            console.log('remove');
+            if(getCookie("username") == data.username){
+                document.getElementById('login-container').style.display = 'block';
+                document.getElementById('create-room-container').style.display = 'none';
+                document.getElementById('chat-container').style.display = 'none';
+            }
+        })
     </script>
 </body>
 

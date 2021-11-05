@@ -22,12 +22,23 @@ app.get('/', (req, res) => {
 //      username
 //      roomId
 let users = {};
+
+
 // rooms
 // roomId : 
 //      owner
 //      isPrivate
 //      password
 let rooms = {};
+
+function findSocketidByUsername(username){
+  for(var key in users){
+    if(users[key].username == username){
+      return key;
+    }
+  }
+  return false;
+}
 
 function isRoomExist(roomId){
   if(Object.keys(rooms).length === 0){
@@ -59,7 +70,11 @@ async function userJoin(socket,userInfo){
     .catch(error => console.error('Error:', error));
 
     io.to(userInfo.roomId).emit('newUser',userInfo.username);
-    io.to(userInfo.roomId).emit('updateUserList',usernamesInRoom);
+    io.to(userInfo.roomId).emit('updateUserList',{
+      usernamesInRoom:usernamesInRoom,
+      owner:rooms[userInfo.roomId].owner
+      });
+    console.log(users);
 }
 
 // 1. listen on the connection event for incoming sockets 
@@ -77,7 +92,9 @@ io.on('connection', async (socket) => {
       "password":roomInfo.password
     }
     console.log(rooms);
-    io.to(socket.id).emit('joinSuccess');
+    io.to(socket.id).emit('joinSuccess',{
+      username:roomInfo.username
+    });
     let userInfo = {username:roomInfo.username, roomId: roomInfo.roomId};
 
     userJoin(socket, userInfo);
@@ -108,13 +125,36 @@ io.on('connection', async (socket) => {
       }
     }    
 
-    io.to(socket.id).emit('joinSuccess');
+    io.to(socket.id).emit('joinSuccess',{
+      username:userInfo.username
+    });
     userJoin(socket, userInfo);
   });
 
   socket.on('chat message',(msg)=>{
     io.to(users[socket.id].roomId).emit('chat message',Array(users[socket.id].username, msg));
   });
+
+  socket.on('remove',(data)=>{
+    console.log('========== remove ==========');
+    let removeSocketId = findSocketidByUsername(data.username);
+    console.log(removeSocketId);
+    if (removeSocketId){
+      // METHOD 1
+      // io.sockets : namespace
+      // namespace.sockets : (Map<SocketId, Socket>)
+      // io.sockets.sockets[removeSocketId] is the socketid of the user that the owner wants to remove
+      // console.log(io.sockets.sockets[removeSocketId]);
+      // io.sockets.sockets[removeSocketId].leave(users[socket.id].roomId);
+      // io.sockets.sockets[removeSocketId].emit('removed');
+
+      // METHOD 2
+      io.to(users[socket.id].roomId).emit('remove',{
+        username:data.username
+      });
+
+    }
+  })
 
   socket.on('disconnect', () => {
     console.log('========== disconnect ==========');
