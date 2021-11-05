@@ -48,33 +48,50 @@ function isRoomExist(roomId){
   }
 }
 
+// async function getUsernamesInRoom(roomId){
+//     // get an array of usernames in room roomId
+//     let usernamesInRoom = [];
+//     await io.in(roomId).allSockets()
+//     .then(socketsInRoomSet => Array.from(socketsInRoomSet))
+//     .then(socketsInRoomArray => {
+//       socketsInRoomArray.forEach(element => {
+//         usernamesInRoom.push(users[element].username);
+//       });
+//     })
+//     .catch(error => console.error('Error:', error));
+
+//     // ?????????????????????
+//     // why can't use return in await and async function 
+//     return usernamesInRoom;
+// }
+
 async function userJoin(socket,userInfo){
   console.log('========== connection ==========');
   console.log(userInfo);
   socket.join(userInfo.roomId);
     
-    users[socket.id] = {
-      "roomId":userInfo.roomId,
-      "username":userInfo.username
-    };
+  users[socket.id] = {
+    "roomId":userInfo.roomId,
+    "username":userInfo.username
+  };
 
-    // get an array of usernames in room roomId
-    let usernamesInRoom = [];
-    await io.in(userInfo.roomId).allSockets()
-    .then(socketsInRoomSet => Array.from(socketsInRoomSet))
-    .then(socketsInRoomArray => {
-      socketsInRoomArray.forEach(element => {
-        usernamesInRoom.push(users[element].username);
-      });
-    })
-    .catch(error => console.error('Error:', error));
+  // get an array of usernames in room roomId
+  let usernamesInRoom = [];
+  await io.in(userInfo.roomId).allSockets()
+  .then(socketsInRoomSet => Array.from(socketsInRoomSet))
+  .then(socketsInRoomArray => {
+    socketsInRoomArray.forEach(element => {
+      usernamesInRoom.push(users[element].username);
+    });
+  })
+  .catch(error => console.error('Error:', error));
 
-    io.to(userInfo.roomId).emit('newUser',userInfo.username);
-    io.to(userInfo.roomId).emit('updateUserList',{
-      usernamesInRoom:usernamesInRoom,
-      owner:rooms[userInfo.roomId].owner
-      });
-    console.log(users);
+  io.to(userInfo.roomId).emit('newUser',userInfo.username);
+  io.to(userInfo.roomId).emit('updateUserList',{
+    usernamesInRoom:usernamesInRoom,
+    owner:rooms[userInfo.roomId].owner
+    });
+  console.log(users);
 }
 
 // 1. listen on the connection event for incoming sockets 
@@ -135,10 +152,12 @@ io.on('connection', async (socket) => {
     io.to(users[socket.id].roomId).emit('chat message',Array(users[socket.id].username, msg));
   });
 
-  socket.on('remove',(data)=>{
+  socket.on('remove',async (data)=>{
     console.log('========== remove ==========');
     let removeSocketId = findSocketidByUsername(data.username);
-    console.log(removeSocketId);
+    let roomId = users[removeSocketId].roomId;
+    console.log("removeSocketId: "+removeSocketId);
+    console.log("roomId: "+roomId);
     if (removeSocketId){
       // METHOD 1
       // io.sockets : namespace
@@ -149,10 +168,36 @@ io.on('connection', async (socket) => {
       // io.sockets.sockets[removeSocketId].emit('removed');
 
       // METHOD 2
-      io.to(users[socket.id].roomId).emit('remove',{
+      io.to(roomId).emit('remove',{
         username:data.username
       });
+      // I have no idea what's wrong with this!
+      // It should work, but it doesn't !!!!!!
+      // https://socket.io/docs/v3/server-api/#namespaceallsockets
+      // io.sockets.sockets[removeSocketId].leave(roomId);
+      if(removeSocketId == socket.id){
+        socket.leave(roomId);
+      }else{
+        delete users[removeSocketId];
 
+        // get an array of usernames in room roomId
+        let usernamesInRoom = [];
+        await io.in(roomId).allSockets()
+        .then(socketsInRoomSet => Array.from(socketsInRoomSet))
+        .then(socketsInRoomArray => {
+          socketsInRoomArray.forEach(element => {
+            usernamesInRoom.push(users[element].username);
+          });
+        })
+
+        .catch(error => console.error('Error:', error));
+
+        io.to(roomId).emit('updateUserList',{
+          usernamesInRoom:usernamesInRoom,
+          owner:rooms[roomId].owner
+          });
+        console.log(users);
+      }
     }
   })
 

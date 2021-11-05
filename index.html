@@ -61,6 +61,7 @@
     <div id="chat-container" style="display: none;">
         <div id="chat-info-container">
             <p id="current-room"></p>
+            <p><button id="exit-btn">Exit</button></p>
             <p>User list:</p>
             <ul id="current-user-list"></ul>
         </div>
@@ -99,6 +100,16 @@
         function deleteCookie(name){
             document.cookie = name+"=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
         }
+        function deleteAllCookies() {
+            var cookies = document.cookie.split(";");
+
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i];
+                var eqPos = cookie.indexOf("=");
+                var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            }
+        }
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -122,6 +133,26 @@
         function displayJoinPwdInput(){
             document.getElementById("passwordFiled").style.display = "block";
         }
+
+        function exitCurrentChatRoom(){
+            if(getCookie("username")){
+                deleteAllCookies();
+                document.getElementById('login-container').style.display = 'block';
+                document.getElementById('create-room-container').style.display = 'none';
+                document.getElementById('chat-container').style.display = 'none';
+                document.getElementById('username').value = "";
+                document.getElementById('roomId').value = "";
+            }
+        }
+
+        document.getElementById('exit-btn').addEventListener('click',function(e){
+            e.preventDefault();
+            socket.emit('userLeave',{
+                username:getCookie('username'),
+                socketId:socket.id
+            });
+            exitCurrentChatRoom();
+        })
     </script>
     <script>
         const socket = io({
@@ -180,6 +211,7 @@
         })
         
         socket.on('joinSuccess', function(data){
+            console.log(socket.id);
             setCookie("username",data.username);
             setCookie("currentRoomId",data.roomId);
             document.getElementById('login-container').style.display = 'none';
@@ -274,11 +306,14 @@
         });
 
         socket.on('remove',function(data){
-            console.log('remove');
             if(getCookie("username") == data.username){
-                document.getElementById('login-container').style.display = 'block';
-                document.getElementById('create-room-container').style.display = 'none';
-                document.getElementById('chat-container').style.display = 'none';
+                exitCurrentChatRoom();
+                alert("You are kicked out by owner of the chat!");
+            }else{
+                let item = document.createElement('div');
+                item.textContent = data.username + " are kicked out by owner of the chat!";
+                messages.appendChild(item);
+                window.scrollTo(0, document.body.scrollHeight);
             }
         })
     </script>
