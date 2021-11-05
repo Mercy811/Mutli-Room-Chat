@@ -149,7 +149,10 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('chat message',(msg)=>{
-    io.to(users[socket.id].roomId).emit('chat message',Array(users[socket.id].username, msg));
+    io.to(users[socket.id].roomId).emit('chat message',{
+      sender:users[socket.id].username, 
+      msg:msg
+    });
   });
 
   socket.on('remove',async (data)=>{
