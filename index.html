@@ -223,12 +223,22 @@
         socket.on('newUser', function (username) {
             let item = document.createElement('div');
             item.textContent = username + " Joined Chat!";
+            item.style.color = "red";
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        })
+
+        socket.on('userLeave', function (data) {
+            let item = document.createElement('div');
+            item.textContent = data.username + " left Chat!";
+            item.style.color = "red";
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
 
         let userList = document.getElementById('current-user-list');
         socket.on('updateUserList', function (data) {
+            console.log("updateUserList");
             // clear current-user-list
             while (userList.firstChild) {
                 userList.removeChild(userList.firstChild);
@@ -242,6 +252,10 @@
                     item.innerHTML = "<strong>"+element+"(Owner)</strong>";
                 }else{
                     item.textContent = element;
+                }
+
+                if(element == getCookie("username")){
+                    item.style.color = "green";
                 }
 
                 if(getCookie("username") == data.owner && element!=data.owner){
@@ -312,6 +326,7 @@
             }else{
                 let item = document.createElement('div');
                 item.textContent = data.username + " are kicked out by owner of the chat!";
+                item.style.color = "red";
                 messages.appendChild(item);
                 window.scrollTo(0, document.body.scrollHeight);
             }

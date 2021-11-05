@@ -189,7 +189,6 @@ io.on('connection', async (socket) => {
             usernamesInRoom.push(users[element].username);
           });
         })
-
         .catch(error => console.error('Error:', error));
 
         io.to(roomId).emit('updateUserList',{
@@ -199,6 +198,36 @@ io.on('connection', async (socket) => {
         console.log(users);
       }
     }
+  })
+
+  socket.on('userLeave', async (data)=>{
+    let roomId = users[data.socketId].roomId;
+    console.log('========== exit ==========');
+    console.log('roomId: '+roomId);
+    if( data.socketId == socket.id){
+      socket.leave(roomId);
+    }else{
+      delete users[data.socketId];
+    }
+
+    // get an array of usernames in room roomId
+    let usernamesInRoom = [];
+    await io.in(roomId).allSockets()
+    .then(socketsInRoomSet => Array.from(socketsInRoomSet))
+    .then(socketsInRoomArray => {
+      socketsInRoomArray.forEach(element => {
+        usernamesInRoom.push(users[element].username);
+      });
+    })
+    .catch(error => console.error('Error:', error));
+
+    io.to(roomId).emit('updateUserList',{
+      usernamesInRoom:usernamesInRoom,
+      owner:rooms[roomId].owner
+      });
+    io.to(roomId).emit('userLeave',{
+      username: data.username
+    })
   })
 
   socket.on('disconnect', () => {
