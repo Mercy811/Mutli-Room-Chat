@@ -228,6 +228,7 @@
             let item = document.createElement('div');
             item.textContent = username + " Joined Chat!";
             item.style.color = "red";
+            item.style.textAlign = "center";
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
@@ -236,6 +237,7 @@
             let item = document.createElement('div');
             item.textContent = data.username + " left Chat!";
             item.style.color = "red";
+            item.style.textAlign = "center";
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
@@ -306,19 +308,23 @@
         // CHAT MESSAGE: receive messages from server
         let messages = document.getElementById('msg-list');
 
-        socket.on('chat message', function (args) {
+        socket.on('chat message', function (data) {
             let itemDiv = document.createElement('div');
             itemDiv.className = "msg-item";
             let itemInfo = document.createElement('p')
             let itemUsername = document.createElement('span');
             itemUsername.className = "msg-item-username";
-            itemUsername.innerText = args[0];
+            itemUsername.innerText = data.sender;
             let itemTime = document.createElement('span');
             itemTime.className = "msg-item-time";
             itemTime.innerText = new Date().toLocaleString();
             let itemMsg = document.createElement('p');
             itemMsg.className = "msg-item-content";
-            itemMsg.innerText = args[1];
+            itemMsg.innerText = data.msg;
+
+            if(getCookie("username") == data.sender){
+                itemDiv.style.textAlign = "right";
+            }
 
             itemInfo.appendChild(itemUsername);
             itemInfo.appendChild(itemTime);
@@ -337,6 +343,7 @@
                 let item = document.createElement('div');
                 item.textContent = data.username + " are kicked out by owner of the chat!";
                 item.style.color = "red";
+                item.style.textAlign = "center";
                 messages.appendChild(item);
                 window.scrollTo(0, document.body.scrollHeight);
             }
