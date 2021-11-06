@@ -124,7 +124,10 @@ io.on('connection', async (socket) => {
     console.log(rooms);
     if(!isRoomExist(userInfo.roomId)){
       console.log("roomNotExist");
-      io.to(socket.id).emit('roomNotExist');
+      io.to(socket.id).emit('roomNotExist',{
+        username: userInfo.username,
+        roomId: userInfo.roomId
+      });
       return;
     }
     
