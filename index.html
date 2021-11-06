@@ -73,8 +73,12 @@
                 <input type="text" name="msg-input" id="msg-input" placeholder="Message">
                 <button id="send-msg-btn">Send</button>
             </form>
+            <input type="text" id="direct_receiver" placeholder="private receiver username">
+            <button id="private_send">Private send to</button>       
         </div>
     </div>
+
+    <div id="private_messages"></div>
 
     <script>
         // reference: https://www.codegrepper.com/code-examples/javascript/login+with+cookies+javascript
@@ -271,9 +275,15 @@
 
                     let banBtn = document.createElement('button');
                     banBtn.textContent = "Ban";
-                    banBtn.id = element;
+                    banBtn.id = "ban" + element;
                     item.appendChild(banBtn);
                 }
+                    //----------我是可爱的分割线---------
+                    // let private_btn = document.createElement('button');
+                    // private_btn .textContent = "Private Message";
+                    // private_btn .id = "prt" + element;
+                    // item.appendChild(private_btn);
+                    //----------我是可爱的分割线---------                }
                 
                 userList.appendChild(item);
             });
@@ -331,6 +341,35 @@
                 window.scrollTo(0, document.body.scrollHeight);
             }
         })
+
+
+        function privateMessage() {
+            let receiver = document.getElementById('direct_receiver').value;
+            let pmsg = document.getElementById('msg-input').value;
+            console.log("Private message send to " + receiver);
+            console.log("Private message is " + pmsg);
+            let msg2 = "You send a private message to " + receiver +": ";
+            document.getElementById("private_messages").appendChild(document.createElement("hr"));
+            document.getElementById("private_messages").appendChild(document.createTextNode(msg2+pmsg));
+            socket.connect();
+            socket.emit("private_message", {receiver:receiver, message:pmsg});
+        }
+        socket.on("private_message", function(data){
+            console.log("private message receiver successfully!");
+            console.log(data["message"]);
+            console.log(data["send"]);
+            let msg1 = data["send"] + " send you a private message :";
+            document.getElementById("private_messages").appendChild(document.createElement("hr"));
+            document.getElementById("private_messages").appendChild(document.createTextNode(msg1));
+            document.getElementById("private_messages").appendChild(document.createTextNode(data["message"]));
+            document.getElementById("private_messages").appendChild(document.createElement("br"));
+            document.getElementById("private_messages").appendChild(document.createTextNode(data["time"]));
+            
+
+            
+
+        });
+        document.getElementById("private_send").addEventListener("click", privateMessage, false);
     </script>
 </body>
 

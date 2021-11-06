@@ -4,6 +4,7 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
+const moment = require("moment");
 
 // initialize a new instance of socket.io
 // by passing the server (the http server) object
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 //      username
 //      roomId
 let users = {};
+let test = [];
 
 
 // rooms
@@ -37,7 +39,7 @@ function findSocketidByUsername(username){
       return key;
     }
   }
-  return false;
+  return -1;
 }
 
 function isRoomExist(roomId){
@@ -229,6 +231,26 @@ io.on('connection', async (socket) => {
       username: data.username
     })
   })
+
+  //-----------我是可爱的分割线---这里写private message接收----
+  socket.on("private_message", function(data){
+    let receiver = data['receiver'];
+    console.log("private message receiver is "+receiver);
+    // function getKeyByValue(object, value) {
+    //   return Object.keys(object).find(key => object[key].username === value);
+    // }
+    console.log("socket id is " + findSocketidByUsername(receiver));
+    let r_id = findSocketidByUsername(receiver);
+    let time = moment().format('MMMM Do YYYY, h:mm:ss a');
+    //socket.to(r_id).emit("private_message",socket.id, {message:data['message'], send:users[socket.id]} );
+    if (r_id !== -1)
+    {socket.to(r_id).emit("private_message", {message:data['message'], send:users[socket.id].username, time:time });}
+    else 
+    {socket.to(socket.id).emit("private_message", {message:"wrong user name",send:System, time:time});}
+
+
+  });
+  //-----------我是可爱的分割线---这里写private message接收----
 
   socket.on('disconnect', () => {
     console.log('========== disconnect ==========');
