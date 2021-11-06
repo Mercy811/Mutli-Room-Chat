@@ -117,6 +117,22 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // DOMContent is fired when the initial HTML document has been completey loaded and parsed,
+        // without waiting for stylesheets, images, and subframes to finish loading
+        document.addEventListener("DOMContentLoaded", function(){
+            let username = getCookie("username");
+            let roomId = getCookie("currentRoomId");
+            if(username && roomId){
+                socket.connect();
+                socket.emit('join', { 
+                    username: username,
+                    roomId: roomId,
+                    password: ""
+                });
+            }
+        });
+
+
         // when create room
         // display password field when isPrivate checkbox is checked
         // hide paassword filed when isPrivate checkbox is unchecked
@@ -224,6 +240,11 @@
             document.getElementById('create-room-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'block';
             document.getElementById('current-room').innerText = "Current Room: " + roomId.value;
+        })
+
+        socket.on('login on another device',function(){
+            alert("Login on another device!");
+            exitCurrentChatRoom();
         })
 
         socket.on('newUser', function (username) {

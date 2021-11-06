@@ -50,50 +50,61 @@ function isRoomExist(roomId){
   }
 }
 
-// async function getUsernamesInRoom(roomId){
-//     // get an array of usernames in room roomId
-//     let usernamesInRoom = [];
-//     await io.in(roomId).allSockets()
-//     .then(socketsInRoomSet => Array.from(socketsInRoomSet))
-//     .then(socketsInRoomArray => {
-//       socketsInRoomArray.forEach(element => {
-//         usernamesInRoom.push(users[element].username);
-//       });
-//     })
-//     .catch(error => console.error('Error:', error));
-
-//     // ?????????????????????
-//     // why can't use return in await and async function 
-//     return usernamesInRoom;
-// }
-
 async function userJoin(socket,userInfo){
-  console.log('========== connection ==========');
-  console.log(userInfo);
-  socket.join(userInfo.roomId);
-    
-  users[socket.id] = {
-    "roomId":userInfo.roomId,
-    "username":userInfo.username
-  };
-
+  console.log('========== userJoin ==========');
+  
   // get an array of usernames in room roomId
   let usernamesInRoom = [];
-  await io.in(userInfo.roomId).allSockets()
-  .then(socketsInRoomSet => Array.from(socketsInRoomSet))
-  .then(socketsInRoomArray => {
-    socketsInRoomArray.forEach(element => {
-      usernamesInRoom.push(users[element].username);
-    });
+  await io.in(userInfo.roomId).fetchSockets()
+  .then(socketInstancesInRoomSet => {
+    console.log(socketInstancesInRoomSet);
+    for (let socketInstance of socketInstancesInRoomSet){
+      console.log("socketInstance.id");
+      console.log(socketInstance.id);
+      if(socketInstance.id != socket.id){
+        usernamesInRoom.push(users[socketInstance.id].username);
+      }
+    }
+    console.log("-----------------");
+    console.log("usernamesInRoom: ");
+    console.log(usernamesInRoom);
+
+    console.log("userInfo.username");
+    console.log(userInfo.username);
+
+    // existing same username
+    if(usernamesInRoom.includes(userInfo.username)){
+      console.log('include');
+      let previousSocketId = findSocketidByUsername(userInfo.username);
+      io.to(previousSocketId).emit("login on another device");
+      delete users[previousSocketId];
+
+    }else{
+      console.log('not include');
+      usernamesInRoom.push(userInfo.username);
+    }
+
+    socket.join(userInfo.roomId);
+    
+    users[socket.id] = {
+      "roomId":userInfo.roomId,
+      "username":userInfo.username
+    };
+
+
+    io.to(userInfo.roomId).emit('newUser',userInfo.username);
+    io.to(userInfo.roomId).emit('updateUserList',{
+      usernamesInRoom:usernamesInRoom,
+      owner:rooms[userInfo.roomId].owner
+      });
+    io.to(socket.id).emit('joinSuccess',{
+      username: userInfo.username,
+      roomId: userInfo.roomId
+    })
+    console.log(users);
   })
   .catch(error => console.error('Error:', error));
 
-  io.to(userInfo.roomId).emit('newUser',userInfo.username);
-  io.to(userInfo.roomId).emit('updateUserList',{
-    usernamesInRoom:usernamesInRoom,
-    owner:rooms[userInfo.roomId].owner
-    });
-  console.log(users);
 }
 
 // 1. listen on the connection event for incoming sockets 
@@ -111,12 +122,11 @@ io.on('connection', async (socket) => {
       "password":roomInfo.password
     }
     console.log(rooms);
-    io.to(socket.id).emit('joinSuccess',{
-      username:roomInfo.username
-    });
-    let userInfo = {username:roomInfo.username, roomId: roomInfo.roomId};
 
-    userJoin(socket, userInfo);
+    userJoin(socket, {
+      username:roomInfo.username, 
+      roomId: roomInfo.roomId
+    });
   });
 
   socket.on('join',async (userInfo)=>{
@@ -145,11 +155,8 @@ io.on('connection', async (socket) => {
           return;
         }
       }
-    }    
+    }
 
-    io.to(socket.id).emit('joinSuccess',{
-      username:userInfo.username
-    });
     userJoin(socket, userInfo);
   });
 
@@ -236,6 +243,20 @@ io.on('connection', async (socket) => {
     io.to(roomId).emit('userLeave',{
       username: data.username
     })
+  })
+
+  socket.on('login on another device',async ()=>{
+    console.log('========== exit ==========');
+    let roomId = users[socket.id].roomId;
+    socket.leave(roomId);
+
+    console.log("users in room "+roomId);
+    await io.in(roomId).allSockets()
+    .then(socketsInRoomSet => Array.from(socketsInRoomSet))
+    .then(socketsInRoomArray => {
+      console.log(socketsInRoomArray);
+    })
+    .catch(error => console.error('Error:', error));
   })
 
   //-----------我是可爱的分割线---这里写private message接收----
