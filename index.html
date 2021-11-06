@@ -356,8 +356,16 @@
             console.log("Private message send to " + receiver);
             console.log("Private message is " + pmsg);
             let msg2 = "You send a private message to " + receiver +": ";
-            document.getElementById("private_messages").appendChild(document.createElement("hr"));
-            document.getElementById("private_messages").appendChild(document.createTextNode(msg2+pmsg));
+            // document.getElementById("private_messages").appendChild(document.createElement("hr"));
+            // document.getElementById("private_messages").appendChild(document.createTextNode(msg2+pmsg));
+            let item = document.createElement('div');
+                item.textContent = "You send a private message to " + receiver +": "+pmsg;
+                item.style.color = "green";
+                item.style.textAlign = "center";
+                messages.appendChild(item);
+
+
+
             socket.connect();
             socket.emit("private_message", {receiver:receiver, message:pmsg});
         }
@@ -365,12 +373,18 @@
             console.log("private message receiver successfully!");
             console.log(data["message"]);
             console.log(data["send"]);
-            let msg1 = data["send"] + " send you a private message :";
-            document.getElementById("private_messages").appendChild(document.createElement("hr"));
-            document.getElementById("private_messages").appendChild(document.createTextNode(msg1));
-            document.getElementById("private_messages").appendChild(document.createTextNode(data["message"]));
-            document.getElementById("private_messages").appendChild(document.createElement("br"));
-            document.getElementById("private_messages").appendChild(document.createTextNode(data["time"]));
+            let msg1 = data["send"] + " send you a private message :" ;
+            // document.getElementById("private_messages").appendChild(document.createElement("hr"));
+            // document.getElementById("private_messages").appendChild(document.createTextNode(msg1));
+            // document.getElementById("private_messages").appendChild(document.createTextNode(data["message"]));
+            // document.getElementById("private_messages").appendChild(document.createElement("br"));
+            // document.getElementById("private_messages").appendChild(document.createTextNode(data["time"]));
+
+            let item = document.createElement('div');
+                item.textContent = data["send"] + " " + data["time"] + " send you a private message :" + data["message"] ;
+                item.style.color = "blue";
+                item.style.textAlign = "center";
+                messages.appendChild(item);
             
 
             

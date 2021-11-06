@@ -249,8 +249,7 @@ io.on('connection', async (socket) => {
     if (r_id !== -1)
     {socket.to(r_id).emit("private_message", {message:data['message'], send:users[socket.id].username, time:time });}
     else 
-    {socket.to(socket.id).emit("private_message", {message:"wrong user name",send:System, time:time});}
-
+    {socket.to(socket.id).emit("private_message", {message:"wrong user name",send:"System", time:time});}
 
   });
   //-----------我是可爱的分割线---这里写private message接收----
