@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Chat Room</title>
     <style>
         #chat-msg-display-container {
             border: 1px solid black;
@@ -21,12 +21,102 @@
             font-size: 14px;
             margin-right: 5 px;
         }
+
+        body{
+            width: 960px; /* how wide to make your web page */
+            background-color: lightgray; /* what color to make the background */
+            margin: 0 auto;
+            padding: 0;
+            font: 20px/30px Arial, Verdana, sans-serif; /* default font */
+           
+        }
+
+        h1 {
+            color:hsla(73, 68%, 39%, 0.882);
+            font-size: x-large;
+            font-family: Arial,"Brush Script MT", cursive;
+            text-shadow: 2px 2px hsl(69, 100%, 50%);
+        }
+
+        table, th, td {
+            border: 1px solid #777;
+            width : 80%;
+            border-collapse: collapse;
+            padding: 5px;
+        } /* learn it from https://www.w3schools.com/css/css_table.asp */
+
+        p { color:rgb(65, 63, 63);}
+
+        input[type=submit] {
+            width: 100%;
+            background-color:hsla(73, 68%, 39%, 0.882);
+            color: white;
+            padding: 2px 3px;
+            margin: 4px 0;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background-color: #4CAF50;
+        }
+
+        button {
+            width: 100%;
+            background-color:hsla(73, 68%, 39%, 0.882);
+            color: white;
+            padding: 2px 3px;
+            margin: 4px 0;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #4CAF50;
+        }
+
+        input[type=text], select {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            }
+
+        input[type=password], select {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            }
+
+        div {
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+            top:50%;  
+        }
+
+        #login-container, #passwordFiled, #create-room-container {
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+            width: 660px; /* how wide to make your web page */
+            margin: 0 auto;  
+        }
     </style>
 </head>
 
 <body>
     <div id="login-container">
-        <h1>Join</h1>
+        <h1>Chat Room Join</h1>
         <form id="login-form">
             <p><label for="username">Username</label></p>
             <p><input type="text" name="username" id="username" autocomplete="off" placeholder="Username" required></p>
@@ -60,7 +150,7 @@
 
     <div id="chat-container" style="display: none;">
         <div id="chat-info-container">
-            <p id="current-room"></p>
+            <h1><p id="current-room"></p></h1>
             <p><button id="exit-btn">Exit</button></p>
             <p>User list:</p>
             <ul id="current-user-list"></ul>
@@ -71,14 +161,12 @@
         <div id="chat-msg-compose-container">
             <form id="send-msg-form">
                 <input type="text" name="msg-input" id="msg-input" placeholder="Message">
-                <button id="send-msg-btn">Send</button>
+                <button id="send-msg-btn">Send to Public</button>
             </form>
             <input type="text" id="direct_receiver" placeholder="private receiver username">
-            <button id="private_send">Private send to</button>       
+            <button id="private_send">Send a private message to</button>       
         </div>
     </div>
-
-    <div id="private_messages"></div>
 
     <script>
         // reference: https://www.codegrepper.com/code-examples/javascript/login+with+cookies+javascript
@@ -396,22 +484,12 @@
             console.log("private message receiver successfully!");
             console.log(data["message"]);
             console.log(data["send"]);
-            let msg1 = data["send"] + " send you a private message :" ;
-            // document.getElementById("private_messages").appendChild(document.createElement("hr"));
-            // document.getElementById("private_messages").appendChild(document.createTextNode(msg1));
-            // document.getElementById("private_messages").appendChild(document.createTextNode(data["message"]));
-            // document.getElementById("private_messages").appendChild(document.createElement("br"));
-            // document.getElementById("private_messages").appendChild(document.createTextNode(data["time"]));
-
             let item = document.createElement('div');
-                item.textContent = data["send"] + " " + data["time"] + " send you a private message :" + data["message"] ;
+                item.textContent = data["send"] + " " + data["time"] + " sends you a private message :" + data["message"] ;
                 item.style.color = "blue";
                 item.style.textAlign = "center";
                 messages.appendChild(item);
-            
-
-            
-
+        
         });
         document.getElementById("private_send").addEventListener("click", privateMessage, false);
     </script>
