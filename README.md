@@ -18,3 +18,5 @@ Creative part:
 2. After sending a private message, the chat board will also display the message to the sender.
 3. Our chat room have a button dislayed with current users and the owner of this room can easily remove or ban these users by simply clicking a button without typing.
 4. Private room check box. Owners can choose to set this room to private room with password or set it to public.
+5. User's messages are displayed at the right side of the chat panel and the other users' messages are displayed at the left side.
+6. System messages to notice a new user's joinning and exiting and being kicked out and being banned.
