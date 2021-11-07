@@ -23,15 +23,24 @@ app.get('/', (req, res) => {
 //      username
 //      roomId
 let users = {};
-let test = [];
-
 
 // rooms
 // roomId : 
 //      owner
 //      isPrivate
 //      password
+//      ban
 let rooms = {};
+
+function getUsernamesByRoomId(roomId){
+  let usernamesInRoom = [];
+  for (var key in users){
+    if(users[key].roomId == roomId){
+      usernamesInRoom.push(users[key].username);
+    }
+  }
+  return usernamesInRoom;
+}
 
 function findSocketidByUsername(username){
   for(var key in users){
@@ -50,61 +59,66 @@ function isRoomExist(roomId){
   }
 }
 
-async function userJoin(socket,userInfo){
+function userJoin(socket,userInfo){
   console.log('========== userJoin ==========');
   
   // get an array of usernames in room roomId
-  let usernamesInRoom = [];
-  await io.in(userInfo.roomId).fetchSockets()
-  .then(socketInstancesInRoomSet => {
-    console.log(socketInstancesInRoomSet);
-    for (let socketInstance of socketInstancesInRoomSet){
-      console.log("socketInstance.id");
-      console.log(socketInstance.id);
-      if(socketInstance.id != socket.id){
-        usernamesInRoom.push(users[socketInstance.id].username);
-      }
-    }
-    console.log("-----------------");
-    console.log("usernamesInRoom: ");
-    console.log(usernamesInRoom);
+  let usernamesInRoom = getUsernamesByRoomId(userInfo.roomId);
+  
+  console.log("-----------------");
+  console.log("usernamesInRoom: ");
+  console.log(usernamesInRoom);
 
-    console.log("userInfo.username");
-    console.log(userInfo.username);
+  console.log("userInfo.username");
+  console.log(userInfo.username);
+  console.log("-----------------");
 
-    // existing same username
-    if(usernamesInRoom.includes(userInfo.username)){
-      console.log('include');
-      let previousSocketId = findSocketidByUsername(userInfo.username);
-      io.to(previousSocketId).emit("login on another device");
-      delete users[previousSocketId];
-
-    }else{
-      console.log('not include');
-      usernamesInRoom.push(userInfo.username);
-    }
-
-    socket.join(userInfo.roomId);
-    
-    users[socket.id] = {
-      "roomId":userInfo.roomId,
-      "username":userInfo.username
-    };
+  // // existing same username
+  // if(usernamesInRoom.includes(userInfo.username)){
+  //   socket.emit("Already login on another device");
+  // }else{
+  //   console.log('not include');
+  //   usernamesInRoom.push(userInfo.username);
+  //   socket.join(userInfo.roomId);
+  
+  //   users[socket.id] = {
+  //     "roomId":userInfo.roomId,
+  //     "username":userInfo.username
+  //   };
 
 
-    io.to(userInfo.roomId).emit('newUser',userInfo.username);
-    io.to(userInfo.roomId).emit('updateUserList',{
-      usernamesInRoom:usernamesInRoom,
-      owner:rooms[userInfo.roomId].owner
-      });
-    io.to(socket.id).emit('joinSuccess',{
-      username: userInfo.username,
-      roomId: userInfo.roomId
-    })
-    console.log(users);
+  //   io.to(userInfo.roomId).emit('newUser',userInfo.username);
+  //   io.to(userInfo.roomId).emit('updateUserList',{
+  //     usernamesInRoom:usernamesInRoom,
+  //     owner:rooms[userInfo.roomId].owner
+  //     });
+  //   io.to(socket.id).emit('joinSuccess',{
+  //     username: userInfo.username,
+  //     roomId: userInfo.roomId
+  //   })
+  //   console.log(users);
+  // }
+
+  console.log('not include');
+  usernamesInRoom.push(userInfo.username);
+  socket.join(userInfo.roomId);
+
+  users[socket.id] = {
+    "roomId":userInfo.roomId,
+    "username":userInfo.username
+  };
+
+
+  io.to(userInfo.roomId).emit('newUser',userInfo.username);
+  io.to(userInfo.roomId).emit('updateUserList',{
+    usernamesInRoom:usernamesInRoom,
+    owner:rooms[userInfo.roomId].owner
+    });
+  io.to(socket.id).emit('joinSuccess',{
+    username: userInfo.username,
+    roomId: userInfo.roomId
   })
-  .catch(error => console.error('Error:', error));
-
+  console.log(users);
 }
 
 // 1. listen on the connection event for incoming sockets 
@@ -119,7 +133,8 @@ io.on('connection', async (socket) => {
     rooms[roomInfo.roomId] = {
       "owner":roomInfo.username,
       "isPrivate":roomInfo.isPrivate,
-      "password":roomInfo.password
+      "password":roomInfo.password,
+      "ban":[]
     }
     console.log(rooms);
 
@@ -143,6 +158,11 @@ io.on('connection', async (socket) => {
     
     console.log("roomExist");
     console.log(userInfo);
+
+    if(rooms[userInfo.roomId].ban.includes(userInfo.username)){
+      socket.emit("banned");
+      return;
+    }
     if(rooms[userInfo.roomId].isPrivate){
       if(!userInfo.password){
         console.log("passwordNeeded");
@@ -167,52 +187,51 @@ io.on('connection', async (socket) => {
     });
   });
 
-  socket.on('remove',async (data)=>{
-    console.log('========== remove ==========');
+  function removeUser(data){
     let removeSocketId = findSocketidByUsername(data.username);
     let roomId = users[removeSocketId].roomId;
     console.log("removeSocketId: "+removeSocketId);
     console.log("roomId: "+roomId);
     if (removeSocketId){
-      // METHOD 1
-      // io.sockets : namespace
-      // namespace.sockets : (Map<SocketId, Socket>)
-      // io.sockets.sockets[removeSocketId] is the socketid of the user that the owner wants to remove
-      // console.log(io.sockets.sockets[removeSocketId]);
-      // io.sockets.sockets[removeSocketId].leave(users[socket.id].roomId);
-      // io.sockets.sockets[removeSocketId].emit('removed');
 
-      // METHOD 2
-      io.to(roomId).emit('remove',{
-        username:data.username
-      });
-      // I have no idea what's wrong with this!
-      // It should work, but it doesn't !!!!!!
-      // https://socket.io/docs/v3/server-api/#namespaceallsockets
-      // io.sockets.sockets[removeSocketId].leave(roomId);
-      if(removeSocketId == socket.id){
-        socket.leave(roomId);
-      }else{
-        delete users[removeSocketId];
+      // io.to(roomId).emit('remove',{
+      //   username:data.username
+      // });
 
-        // get an array of usernames in room roomId
-        let usernamesInRoom = [];
-        await io.in(roomId).allSockets()
-        .then(socketsInRoomSet => Array.from(socketsInRoomSet))
-        .then(socketsInRoomArray => {
-          socketsInRoomArray.forEach(element => {
-            usernamesInRoom.push(users[element].username);
-          });
-        })
-        .catch(error => console.error('Error:', error));
+      delete users[removeSocketId];
 
-        io.to(roomId).emit('updateUserList',{
-          usernamesInRoom:usernamesInRoom,
-          owner:rooms[roomId].owner
-          });
-        console.log(users);
-      }
+      // get an array of usernames in room roomId
+      let usernamesInRoom = getUsernamesByRoomId(roomId);
+
+      io.to(roomId).emit('updateUserList',{
+        usernamesInRoom:usernamesInRoom,
+        owner:rooms[roomId].owner
+        });
+
     }
+  }
+
+  socket.on('kick out request',async (data)=>{
+    console.log('========== kick out request ==========');
+
+    removeUser(data);
+
+    io.to(data.roomId).emit('kick out response',{
+      username:data.username
+    });
+    console.log(rooms[data.roomId].ban);
+  })
+
+  socket.on('ban request',(data)=>{
+    console.log('========== banRequest ==========');
+    rooms[data.roomId].ban.push(data.username);
+
+    removeUser(data);
+
+    io.to(data.roomId).emit('ban response',{
+      username:data.username
+    });
+    console.log(rooms[data.roomId].ban);
   })
 
   socket.on('userLeave', async (data)=>{
