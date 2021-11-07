@@ -8,7 +8,7 @@ http://ec2-3-96-174-109.ca-central-1.compute.amazonaws.com:3000/
 
 How to use our website:
 1. User can type their username and room name to join a chat room. If this room is private, a user needs to type a correct password to enter the main chat room. If a room does not exist, users can create a room or a private room with password.
-2. Users can use "send to public" button to send messages to public or use "send to a private user" button and type the username of a user to send a private message.
+2. Users can use "send to public" button to send messages to public or use "send to a private user" button and type the username of a receiver to send a private message.
 3. Users can exit the room by clickinge "exit" button.
 4. The owner of this room has the access to remove or ban the other users.
 
