@@ -231,6 +231,10 @@
         socket.on('wrongPassword', function(){
             document.getElementById('pwd-msg').innerText = "Wrong password, please try again";
         })
+
+        socket.on('Already login on another device',function(){
+            alert('Already login on another device');
+        })
         
         socket.on('joinSuccess', function(data){
             console.log(socket.id);
@@ -240,11 +244,6 @@
             document.getElementById('create-room-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'block';
             document.getElementById('current-room').innerText = "Current Room: " + roomId.value;
-        })
-
-        socket.on('login on another device',function(){
-            alert("Login on another device!");
-            exitCurrentChatRoom();
         })
 
         socket.on('newUser', function (username) {
@@ -289,18 +288,25 @@
 
                 if(getCookie("username") == data.owner && element!=data.owner){
                     let removeBtn = document.createElement('button');
-                    removeBtn.textContent = "Remove";
+                    removeBtn.textContent = "Kick out";
                     removeBtn.id = element;
                     removeBtn.addEventListener('click',function(){
-                        socket.emit("remove",{
-                            username:this.id
+                        socket.emit("kick out request",{
+                            username:this.id,
+                            roomId: getCookie('currentRoomId')
                         })
                     })
                     item.appendChild(removeBtn);
 
                     let banBtn = document.createElement('button');
                     banBtn.textContent = "Ban";
-                    banBtn.id = "ban" + element;
+                    banBtn.id = "ban-" + element;
+                    banBtn.addEventListener('click',function(){
+                        socket.emit("ban request",{
+                            username:this.id.substring(4,this.id.length),
+                            roomId: getCookie('currentRoomId')
+                        })
+                    })
                     item.appendChild(banBtn);
                 }
                     //----------我是可爱的分割线---------
@@ -358,13 +364,31 @@
             window.scrollTo(0, document.body.scrollHeight);
         });
 
-        socket.on('remove',function(data){
+        socket.on('kick out response',function(data){
             if(getCookie("username") == data.username){
                 exitCurrentChatRoom();
                 alert("You are kicked out by owner of the chat!");
             }else{
                 let item = document.createElement('div');
                 item.textContent = data.username + " are kicked out by owner of the chat!";
+                item.style.color = "red";
+                item.style.textAlign = "center";
+                messages.appendChild(item);
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        });
+
+        socket.on('banned',function(){
+            alert('You are banned from the owner');
+        });
+
+        socket.on('ban response',(data)=>{
+            if(getCookie("username") == data.username){
+                exitCurrentChatRoom();
+                alert("You are banned from the owner!");
+            }else{
+                let item = document.createElement('div');
+                item.textContent = data.username + " are banned by owner of the chat!";
                 item.style.color = "red";
                 item.style.textAlign = "center";
                 messages.appendChild(item);
