@@ -20,3 +20,6 @@ Creative part:
 4. Private room check box. Owners can choose to set this room to private room with password or set it to public.
 5. User's messages are displayed at the right side of the chat panel and the other users' messages are displayed at the left side.
 6. System messages to notice a new user's joinning and exiting and being kicked out and being banned.
+
+-2pts kicking or banning a user logs them out\
+-5pts most creative portions are rubric requirements
